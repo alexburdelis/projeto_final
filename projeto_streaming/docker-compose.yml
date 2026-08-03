@@ -1,0 +1,71 @@
+version: '3.8'
+
+services:
+  # 1. O BANCO DE DADOS
+  postgres_db:
+    image: postgres:16
+    container_name: streamflix_postgres
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: streamflix
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data # persistência dos dados do banco
+    healthcheck: # verifica se o banco está pronto para receber conexões
+      test: ["CMD-SHELL", "pg_isready -U admin -d streamflix"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # 2. O MENSAGEIRO
+  rabbitmq_msg:
+    image: rabbitmq:3-management
+    container_name: streamflix_rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: admin
+
+  # 3. a api - faz a ponte entre o banco e o mensageiro
+  api:
+    build: .
+    container_name: streamflix_api
+    command: uvicorn app:app --host 0.0.0.0 --port 8000
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://admin:admin@postgres_db:5432/streamflix
+      - RABBIT_HOST=rabbitmq_msg
+      - RABBIT_PORT=5672
+      - RABBIT_USER=admin
+      - RABBIT_PASS=admin
+    depends_on: # <-- JUNTOU TUDO AQUI
+      postgres_db:
+        condition: service_healthy
+      rabbitmq_msg:
+        condition: service_started
+
+  # 4. worker - consome as mensagens do mensageiro e faz o processamento
+  worker:
+    build: .
+    container_name: streamflix_worker
+    command: python mensageria/subscriber.py
+    environment:
+      - DATABASE_URL=postgresql://admin:admin@postgres_db:5432/streamflix
+      - RABBIT_HOST=rabbitmq_msg
+      - RABBIT_PORT=5672
+      - RABBIT_USER=admin
+      - RABBIT_PASS=admin
+    depends_on: # <-- JUNTOU TUDO AQUI
+      postgres_db:
+        condition: service_healthy
+      rabbitmq_msg:
+        condition: service_started
+
+# Declaração do volume para salvar os dados do Postgres 
+volumes:
+  postgres_data:

@@ -1,0 +1,12 @@
+# Usa a versão slim 
+FROM python:3.13-slim
+
+# Define a pasta de trabalho dentro do container
+WORKDIR /app
+
+# Copia e instala as dependências primeiro (Truque do Cache do Docker)
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copia todo o resto do código para dentro do container
+COPY . /app

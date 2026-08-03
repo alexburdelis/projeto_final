@@ -1,0 +1,14 @@
+# Ambientes Virtuais
+venv/
+env/
+.venv/
+
+# Cache do Python
+__pycache__/
+*.pyc
+
+# Arquivos de ambiente/senhas 
+.env
+
+# Pastas do SO 
+.DS_Store
