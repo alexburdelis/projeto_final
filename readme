@@ -1,22 +1,34 @@
-#subir container do postgres
-docker run -d \
-  --name postgres_streamflix \
-  -e POSTGRES_USER=admin \
-  -e POSTGRES_PASSWORD=alex \
-  -e POSTGRES_DB=streamflix \
-  -p 5433:5432 \
-  postgres:16
+# 🎬 StreamFlix API - Projeto Final ASA
 
-#subir container do rabbitmq
-docker run -d \
-  --name rabbitmq_streamflix \
-  -p 5672:5672 \
-  -p 15672:15672 \
-  -e RABBITMQ_DEFAULT_USER=admin \
-  -e RABBITMQ_DEFAULT_PASS=admin \
-  rabbitmq:3-management
+Plataforma de processamento assíncrono de vídeos utilizando arquitetura de microsserviços.
 
+## 🚀 Tecnologias Utilizadas
+- **API:** Python + FastAPI
+- **Banco de Dados:** PostgreSQL + SQLAlchemy (ORM)
+- **Mensageria:** RabbitMQ (Publisher/Subscriber)
+- **Segurança:** JWT (JSON Web Tokens) + Bcrypt
+- **Infraestrutura:** Docker Compose + Kubernetes (K8s / Kind)
 
+## 🏗️ Arquitetura
+1. O usuário faz login (JWT) e envia os dados do vídeo via HTTP POST.
+2. A API salva os metadados no PostgreSQL e cria uma Tarefa com status `PENDENTE`.
+3. A API envia o ID da tarefa para a fila do **RabbitMQ** e responde ao usuário instantaneamente.
+4. O **Worker** (Subscriber) consome a fila, simula o processamento do vídeo e atualiza o status no banco para `CONCLUIDO`.
 
+## ⚙️ Como rodar localmente (Docker Compose)
+```bash
+docker compose up --build -d
+Acesse a documentação interativa em: http://localhost:8000/docs
 
-  watch -n 2 kubectl get pods
+##☸️ Como rodar no Kubernetes (Kind)
+# 1. Gerar a imagem e carregar no cluster
+docker build -t streamflix-app:v5 .
+kind load docker-image streamflix-app:v5 --name asa-cluster
+
+# 2. Aplicar os manifestos
+kubectl apply -f kubernetes/configmap.yaml
+kubectl apply -f kubernetes/infra.yaml
+kubectl apply -f kubernetes/app.yaml
+
+# 3. Acessar a API
+kubectl port-forward svc/api-service 8000:8000
