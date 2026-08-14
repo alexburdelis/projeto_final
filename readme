@@ -1,36 +1,54 @@
-```
 # 🎬 StreamFlix API - Projeto Final ASA
 
 Plataforma de processamento assíncrono de vídeos utilizando arquitetura de microsserviços.
 
+---
+
 ## 🚀 Tecnologias Utilizadas
+
 - **API:** Python + FastAPI
 - **Banco de Dados:** PostgreSQL + SQLAlchemy (ORM)
 - **Mensageria:** RabbitMQ (Publisher/Subscriber)
 - **Segurança:** JWT (JSON Web Tokens) + Bcrypt
 - **Infraestrutura:** Docker Compose + Kubernetes (K8s / Kind)
 
+---
+
 ## 🏗️ Arquitetura
+
 1. O usuário faz login (JWT) e envia os dados do vídeo via HTTP POST.
 2. A API salva os metadados no PostgreSQL e cria uma Tarefa com status `PENDENTE`.
 3. A API envia o ID da tarefa para a fila do **RabbitMQ** e responde ao usuário instantaneamente.
 4. O **Worker** (Subscriber) consome a fila, simula o processamento do vídeo e atualiza o status no banco para `CONCLUIDO`.
 
-## ⚙️ Como rodar localmente (Docker Compose)
+---
+
+## ⚙️ Como Rodar Localmente (Docker Compose)
+
 ```bash
 docker compose up --build -d
-Acesse a documentação interativa em: http://localhost:8000/docs
+```
 
-##☸️ Como rodar no Kubernetes (Kind)
-# 1. Gerar a imagem e carregar no cluster
+Acesse a documentação interativa em: [http://localhost:8000/docs](http://localhost:8000/docs)
+
+---
+
+## ☸️ Como Rodar no Kubernetes (Kind)
+
+### 1. Gerar a imagem e carregar no cluster
+```bash
 docker build -t streamflix-app:v5 .
 kind load docker-image streamflix-app:v5 --name asa-cluster
+```
 
-# 2. Aplicar os manifestos
+### 2. Aplicar os manifestos
+```bash
 kubectl apply -f kubernetes/configmap.yaml
 kubectl apply -f kubernetes/infra.yaml
 kubectl apply -f kubernetes/app.yaml
+```
 
-# 3. Acessar a API
+### 3. Acessar a API
+```bash
 kubectl port-forward svc/api-service 8000:8000
 ```
