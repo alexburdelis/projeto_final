@@ -1,3 +1,4 @@
+'''
 # 🎬 StreamFlix API - Projeto Final ASA
 
 Plataforma de processamento assíncrono de vídeos utilizando arquitetura de microsserviços.
@@ -32,3 +33,4 @@ kubectl apply -f kubernetes/app.yaml
 
 # 3. Acessar a API
 kubectl port-forward svc/api-service 8000:8000
+'''
